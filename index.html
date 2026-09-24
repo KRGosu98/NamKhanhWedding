@@ -343,6 +343,7 @@ const CONFIG = {
   .thanks p{margin:0 auto 6px;max-width:420px}
   .thanks .again{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;margin-top:14px}
   .closed{text-align:center;font-weight:600}
+  .nw{white-space:nowrap}
   .send-status{margin:14px auto 0 !important;font-size:13px;font-weight:700;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;gap:8px}
   .send-status[data-state=ok]{color:#6f8540}.send-status[data-state=fail]{color:#b3261e}
   .send-status .again{margin:0;font-size:13px}
@@ -531,6 +532,32 @@ const CONFIG = {
     .pmap{aspect-ratio:16/8}
     .pcap{font-size:16px;bottom:7px}
     .polaroid .ph-heart{width:22px;height:24px;right:-12px;top:-14px}
+    /* mục 03: gom nhãn + lựa chọn trên cùng một dòng */
+    .row-field{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .row-field > legend{float:left;margin:0}
+    fieldset.row-field{display:flex}
+    .row-field .rf-text label{display:block;margin-bottom:0;font-family:var(--display);font-weight:700;font-size:13.5px}
+    .row-field .hint{margin:1px 0 0;font-size:11px;line-height:1.3}
+    .row-field .select-wrap{flex:none;width:118px}
+    .row-field .select-wrap select{padding:8px 34px 8px 12px;font-size:14px}
+    .row-field .select-wrap::after{right:13px}
+    .row-field .pills{flex:none}
+    .thanks .big{font-size:26px}
+    #rsvp .mag-head{margin-bottom:6px}
+    #rsvp .rsvp-wrap .bow-top{width:52px;height:39px;top:-18px}
+    #rsvp .rsvp-card{padding:20px 14px 12px}
+    .rsvp-card .deadline{font-size:11.5px;padding:6px 8px;margin-bottom:10px;line-height:1.35}
+    .rsvp-card .deadline .close-note{margin-top:4px;padding-top:4px;font-size:11px}
+    #rsvpForm .field{margin-bottom:9px}
+    #rsvpForm .field > label,#rsvpForm .field legend,#rsvpForm .rf-text label{font-size:13.5px;margin-bottom:3px}
+    #rsvpForm input[type=text]{padding:8px 13px}
+    #rsvpForm textarea{min-height:44px;height:44px;padding:8px 13px}
+    #rsvpForm .pill span{padding:7px 11px;font-size:13px}
+    #rsvpForm .row-field .hint{display:none}
+    #rsvpForm .submit{padding:10px 18px;font-size:15.5px}
+    #rsvpForm .collapse.open{margin-bottom:0}
+    .thanks p{font-size:14px;line-height:1.55}
+    .thanks .map-btn{margin-top:12px}
     /* các trang khác */
     .closing .page-inner{padding-top:56px}
     .closing .site-footer{margin-top:24px;padding:18px 0 22px}
@@ -779,9 +806,9 @@ const CONFIG = {
           </fieldset>
 
           <div class="collapse" id="yesBlock"><div>
-            <div class="field">
-              <label for="fGuests" data-i18n="lGuests">Số người tham dự dự kiến</label>
-              <p class="hint" data-i18n="hGuests">Kể cả người đi cùng: vợ/chồng, con cái…</p>
+            <div class="field row-field">
+              <div class="rf-text"><label for="fGuests" data-i18n="lGuests">Số người tham dự dự kiến</label>
+              <p class="hint" data-i18n="hGuests">Kể cả người đi cùng: vợ/chồng, con cái…</p></div>
               <div class="select-wrap"><select id="fGuests" name="guests"></select></div>
             </div>
             <div class="field" id="churchField">
@@ -789,7 +816,7 @@ const CONFIG = {
             </div>
           </div></div>
 
-          <fieldset class="field">
+          <fieldset class="field row-field">
             <legend data-i18n="lSide">Khách mời của</legend>
             <div class="pills">
               <label class="pill"><input type="radio" name="side" value="Nhà Nam"><span data-i18n="sideNam">Nhà Nam</span></label>
@@ -869,9 +896,9 @@ const CONFIG = {
       closedNote:'Form xác nhận đã đóng',
       thanks:n=>`Cảm ơn ${n}!`,
       stSending:'<span class="dotspin"></span> Đang lưu xác nhận…', stOk:'✓ Đã lưu xác nhận', stFail:'Chưa lưu được do mạng yếu.', stRetry:'Thử lại',
-      thanksYes:(g,d)=>`Nam &amp; Khanh đã ghi nhận <b>${g} người</b> tham dự. Rất mong được gặp vào ngày ${d}!`,
-      thanksNo:'Tiếc quá vì lần này không gặp được. Cảm ơn đã báo cho Nam &amp; Khanh biết!',
-      gcal:'＋ Thêm vào Google Calendar', again:'Cần thay đổi thông tin? Gửi lại xác nhận', gcalText:'Đám cưới Thiên Nam & Vân Khanh',
+      thanksYes:(g,d)=>`<span class="nw">Nam &amp; Khanh đã ghi nhận</span> <span class="nw"><b>${g} người</b> tham dự.</span><br><span class="nw">Rất mong được gặp</span> <span class="nw">vào ngày ${d}!</span>`,
+      thanksNo:'<span class="nw">Tiếc quá vì lần này</span> <span class="nw">không gặp được.</span><br><span class="nw">Cảm ơn đã báo</span> <span class="nw">cho Nam &amp; Khanh biết!</span>',
+      gcal:'＋ Thêm vào Google Calendar', again:'<span class="nw">Cần thay đổi thông tin?</span> <span class="nw">Gửi lại xác nhận</span>', gcalText:'Đám cưới Thiên Nam & Vân Khanh',
       withLove:'with love', seeYou:'Hẹn gặp nhau ngày 28.11 nhé!',
       navHome:'Thiệp mời', navWhen:'Thời gian & địa điểm', navTl:'Chương trình', navRsvp:'Xác nhận', navThanks:'Lời cảm ơn',
       closing:'<span>Sự hiện diện của mọi người</span> <span>chính là</span> <mark><span>niềm hạnh phúc</span> <span>trọn vẹn nhất</span></mark> <span>của vợ chồng Nam&nbsp;&amp;&nbsp;Khanh</span>'
@@ -900,7 +927,7 @@ const CONFIG = {
       closedNote:'RSVP is now closed',
       thanks:n=>`Thank you, ${n}!`,
       stSending:'<span class="dotspin"></span> Saving your RSVP…', stOk:'✓ RSVP saved', stFail:'Couldn’t save — weak connection.', stRetry:'Try again',
-      thanksYes:(g,d)=>`Nam &amp; Khanh have saved <b>${g} ${g===1?'seat':'seats'}</b> for you. Can’t wait to see you on ${d}!`,
+      thanksYes:(g,d)=>`<span class="nw">Nam &amp; Khanh have saved</span> <span class="nw"><b>${g} ${g===1?'seat':'seats'}</b> for you.</span><br><span class="nw">Can’t wait to see you</span> <span class="nw">on ${d}!</span>`,
       thanksNo:'We’ll miss you this time. Thank you for letting Nam &amp; Khanh know!',
       gcal:'＋ Add to Google Calendar', again:'Need to change something? Send again', gcalText:'Nam & Khanh’s Wedding',
       withLove:'with love', seeYou:'See you on 28.11!',
@@ -1111,8 +1138,10 @@ const CONFIG = {
       <p>${yes ? t('thanksYes')(d.guests, dmy(C.reception.date)) : t('thanksNo')}</p>
       ${yes ? `<a class="map-btn" href="${gcalLink()}" target="_blank" rel="noopener">${t('gcal')}</a>` : ''}
       <p class="send-status" id="sendStatus" data-state="sending" aria-live="polite"></p>
-      <button class="again" onclick="location.reload()">${t('again')}</button>
+      <button class="again" id="againBtn">${t('again')}</button>
     </div>`;
+    const pg = document.getElementById('rsvp'); if (pg) pg.scrollTop = 0;
+    const ag = document.getElementById('againBtn'); if (ag) ag.onclick = () => { try{localStorage.setItem('rsvp_go','1')}catch(e){} location.reload(); };
     try { localStorage.setItem('rsvp_done', JSON.stringify({name:d.name, attending:d.attending, guests:d.guests})); } catch(e){}
   }
 
@@ -1245,7 +1274,8 @@ const CONFIG = {
   document.querySelectorAll('a[href="#rsvp"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); goTo('p-rsvp'); }));
   // tab tới ô nhập ở trang khác (hoặc mở link #rsvp) → nhảy tới trang chứa nó
   document.addEventListener('focusin', e => { const i = pages.findIndex(p => p.contains(e.target)); if (i >= 0 && i !== cur) show(i); });
-  show(location.hash === '#rsvp' ? 3 : 0);
+  let goRsvp = location.hash === '#rsvp'; try { if (localStorage.getItem('rsvp_go')) { goRsvp = true; localStorage.removeItem('rsvp_go'); } } catch(e){}
+  show(goRsvp ? 3 : 0);
 
   /* reveal on scroll */
   const io = 'IntersectionObserver' in window ? new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} }), {threshold:.12}) : null;
