@@ -221,7 +221,8 @@ const CONFIG = {
     box-shadow:0 18px 30px -18px rgba(74,63,58,.45)}
   .polaroid .tape{position:absolute;width:96px;height:26px;background:rgba(243,237,189,.9);top:-12px;left:50%;transform:translateX(-50%) rotate(4deg);z-index:2}
   .pmap{position:relative;aspect-ratio:4/3.3;border-radius:3px;overflow:hidden;background:#f3efe6}
-  .pmap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;filter:saturate(.85)}
+  .pmap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;filter:saturate(.85);pointer-events:none}
+  .pmap-cover{position:absolute;inset:0;z-index:2;touch-action:pan-y}
   .pmap .map-fallback{position:absolute;inset:0;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center;font-weight:700;color:var(--ink-soft);font-size:14px}
   .pcap{position:absolute;left:0;right:0;bottom:14px;text-align:center;font-family:var(--hand);font-weight:700;font-size:23px;color:var(--accent);line-height:1}
   .polaroid .ph-heart{position:absolute;right:-16px;top:-22px;color:#E882B0}
@@ -948,7 +949,8 @@ const CONFIG = {
     const big = `${d[2]} · ${d[1]} · ${d[0].slice(2)}`;
     const polaroid = embed ? `<figure class="polaroid"><span class="tape"></span>
         <div class="pmap"><div class="map-fallback">${pinSvg}<span>${t('mapLoading')}</span></div>
-          <iframe src="${esc(embed)}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="${t('mapTitle')} ${esc(vMain)}"></iframe></div>
+          <iframe src="${esc(embed)}" loading="lazy" tabindex="-1" referrerpolicy="no-referrer-when-downgrade" title="${t('mapTitle')} ${esc(vMain)}"></iframe>
+          <a class="pmap-cover" href="${esc(openUrl)}" target="_blank" rel="noopener" aria-label="${t('openMap')}"></a></div>
         <figcaption class="pcap">${t('mapCap')}</figcaption>
         <svg class="ph-heart" width="30" height="32" aria-hidden="true"><use href="#d-heart-o"/></svg></figure>` : '';
     return `<article class="event in ev-combo">${polaroid}
@@ -1108,7 +1110,7 @@ const CONFIG = {
   const wipe = document.getElementById('wipe'), s1 = wipe.querySelector('.s1'), s2 = wipe.querySelector('.s2');
   wipe.querySelectorAll('.doodle,.wd').forEach((d,k) => d.style.setProperty('--i', k));
   pages.forEach(p => p.querySelectorAll('.doodle').forEach((d,k) => d.style.setProperty('--i', k)));
-  const EASE = 'cubic-bezier(.76,0,.24,1)';
+  const EASE = 'cubic-bezier(.65,0,.25,1)';
   function show(i, fromBottom){
     i = Math.max(0, Math.min(pages.length - 1, i));
     pages.forEach((p,k) => {
@@ -1139,25 +1141,25 @@ const CONFIG = {
     wipe.style.setProperty('--wc2', bg);
     wipe.style.setProperty('--wc1', `color-mix(in srgb, ${bg} 55%, #EFBDBD)`);
     const from = back ? '-125%' : '125%', to = back ? '125%' : '-125%';
-    const T = 1900, cover = 0.44;
+    const T = 980, cover = 0.42;
     const kf = [
       {transform:`translate3d(0,${from},0)`, offset:0},
       {transform:'translate3d(0,0,0)', offset:cover},
       {transform:'translate3d(0,0,0)', offset:cover + .08},
       {transform:`translate3d(0,${to},0)`, offset:1}];
     s1.animate(kf, {duration:T, easing:EASE, fill:'both'});
-    s2.animate(kf, {duration:T, delay:180, easing:EASE, fill:'both'});
+    s2.animate(kf, {duration:T, delay:80, easing:EASE, fill:'both'});
     const oldInner = pages[cur].querySelector('.page-inner');
     oldInner.animate([{transform:'none', opacity:1, filter:'blur(0)'},{transform:`translateY(${back ? '6%' : '-6%'}) scale(.94)`, opacity:.4, filter:'blur(2px)'}],
-      {duration:T * cover + 180, easing:'cubic-bezier(.5,0,.75,0)'});
+      {duration:T * cover + 80, easing:'cubic-bezier(.5,0,.75,0)'});
     setTimeout(() => {
       show(i, back);
       pages[i].querySelector('.page-inner').animate(
         [{transform:`translateY(${back ? '-4%' : '4%'}) scale(1.03)`, opacity:.3},{transform:'none', opacity:1}],
         {duration:T * (1 - cover), easing:'cubic-bezier(.2,.8,.2,1)'});
-    }, T * cover + 200);
-    setTimeout(() => { busy = false; if (pending !== null) { const n = pending; pending = null; go(n); } }, T * cover + 700);
-    lockUntil = Date.now() + T * cover + 700;
+    }, T * cover + 90);
+    setTimeout(() => { busy = false; if (pending !== null) { const n = pending; pending = null; go(n); } }, T * cover + 220);
+    lockUntil = Date.now() + T * cover + 260;
   }
   const atBottom = p => p.scrollTop + p.clientHeight >= p.scrollHeight - 6;
   const atTop = p => p.scrollTop <= 1;
@@ -1168,8 +1170,8 @@ const CONFIG = {
     if (now - lastWheel > 220) wheelAcc = 0;          // bắt đầu cú cuộn mới
     lastWheel = now;
     if (busy || now < lockUntil) { lockUntil = Math.max(lockUntil, now + 80); return; }   // bỏ quán tính trackpad
-    if (e.deltaY > 0 && atBottom(p)) { wheelAcc += e.deltaY; if (wheelAcc > 40) { wheelAcc = 0; go(cur + 1); } }
-    else if (e.deltaY < 0 && atTop(p)) { wheelAcc += e.deltaY; if (wheelAcc < -40) { wheelAcc = 0; go(cur - 1); } }
+    if (e.deltaY > 0 && atBottom(p)) { wheelAcc += e.deltaY; if (wheelAcc > 18) { wheelAcc = 0; go(cur + 1); } }
+    else if (e.deltaY < 0 && atTop(p)) { wheelAcc += e.deltaY; if (wheelAcc < -18) { wheelAcc = 0; go(cur - 1); } }
     else wheelAcc = 0;
   }, {passive:true});
   // vuốt trên điện thoại: nhận ngay khi ngón tay kéo đủ 36px (không chờ nhấc tay), vuốt nhanh thì chỉ cần 18px
@@ -1181,7 +1183,7 @@ const CONFIG = {
   }, {passive:true});
   function tryFlip(dy, fast){
     if (fired) return;
-    const p = pages[cur], need = fast ? 22 : 36;
+    const p = pages[cur], need = fast ? 12 : 22;
     const down = dy > need && (busy || (tStartBottom && atBottom(p))), up = dy < -need && (busy || (tStartTop && atTop(p)));
     if (!down && !up) return;
     fired = true;
