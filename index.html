@@ -343,6 +343,11 @@ const CONFIG = {
   .thanks p{margin:0 auto 6px;max-width:420px}
   .thanks .again{background:none;border:0;color:var(--accent);font:inherit;font-weight:700;text-decoration:underline;cursor:pointer;margin-top:14px}
   .closed{text-align:center;font-weight:600}
+  .send-status{margin:14px auto 0 !important;font-size:13px;font-weight:700;color:var(--ink-soft);display:flex;align-items:center;justify-content:center;gap:8px}
+  .send-status[data-state=ok]{color:#6f8540}.send-status[data-state=fail]{color:#b3261e}
+  .send-status .again{margin:0;font-size:13px}
+  .dotspin{width:12px;height:12px;border-radius:50%;border:2px solid var(--babypink);border-top-color:var(--accent);animation:dsp .8s linear infinite;display:inline-block}
+  @keyframes dsp{to{transform:rotate(360deg)}}
   .closed-card{padding:14px 0 6px}
   .closed-card p{line-height:1.7;text-wrap:balance}
   .closed-card p span{white-space:nowrap}
@@ -863,6 +868,7 @@ const CONFIG = {
       closedBody:d=>`<span>Tiệc cưới của Nam &amp; Khanh</span> <span>đã diễn ra ngày ${d}.</span><br><span>Cảm ơn mọi người</span> <span>đã đến chung vui</span> <span>và gửi thật nhiều lời chúc&nbsp;♡</span>`,
       closedNote:'Form xác nhận đã đóng',
       thanks:n=>`Cảm ơn ${n}!`,
+      stSending:'<span class="dotspin"></span> Đang lưu xác nhận…', stOk:'✓ Đã lưu xác nhận', stFail:'Chưa lưu được do mạng yếu.', stRetry:'Thử lại',
       thanksYes:(g,d)=>`Nam &amp; Khanh đã ghi nhận <b>${g} người</b> tham dự. Rất mong được gặp vào ngày ${d}!`,
       thanksNo:'Tiếc quá vì lần này không gặp được. Cảm ơn đã báo cho Nam &amp; Khanh biết!',
       gcal:'＋ Thêm vào Google Calendar', again:'Cần thay đổi thông tin? Gửi lại xác nhận', gcalText:'Đám cưới Thiên Nam & Vân Khanh',
@@ -893,6 +899,7 @@ const CONFIG = {
       closedBody:d=>`<span>Nam &amp; Khanh’s wedding</span> <span>took place on ${d}.</span><br><span>Thank you</span> <span>for celebrating with us</span> <span>and for all</span> <span>your lovely wishes&nbsp;♡</span>`,
       closedNote:'RSVP is now closed',
       thanks:n=>`Thank you, ${n}!`,
+      stSending:'<span class="dotspin"></span> Saving your RSVP…', stOk:'✓ RSVP saved', stFail:'Couldn’t save — weak connection.', stRetry:'Try again',
       thanksYes:(g,d)=>`Nam &amp; Khanh have saved <b>${g} ${g===1?'seat':'seats'}</b> for you. Can’t wait to see you on ${d}!`,
       thanksNo:'We’ll miss you this time. Thank you for letting Nam &amp; Khanh know!',
       gcal:'＋ Add to Google Calendar', again:'Need to change something? Send again', gcalText:'Nam & Khanh’s Wedding',
@@ -1049,22 +1056,42 @@ const CONFIG = {
       side, message: $('#fMsg').value.trim(), invitedAs: to, lang,
       ua: navigator.userAgent.slice(0,120)
     };
-    const btn = $('#submitBtn'); btn.disabled = true; btn.textContent = t('sending');
-    try {
-      if (C.endpoint) {
-        const res = await fetch(C.endpoint, { method:'POST', body: JSON.stringify(data) });   // text/plain → không bị CORS preflight
-        const j = await res.json().catch(() => ({ok: res.ok}));
-        if (!j.ok) throw new Error(j.error || 'fail');
-      } else {
-        await new Promise(r => setTimeout(r, 600));
-        console.info('[RSVP preview]', data);
-      }
-      thanksData = data; showThanks(data);
-    } catch (e) {
-      err.textContent = t('errSend');
-      btn.disabled = false; btn.textContent = t('submit');
-    }
+    // Hiện lời cảm ơn NGAY; gửi dữ liệu chạy ngầm phía sau (Google Apps Script thường mất 2–5 giây)
+    thanksData = data; showThanks(data);
+    savePending(data);
+    sendRSVP(data);
   });
+
+  /* ---- gửi ngầm + tự thử lại ---- */
+  function savePending(d){ try { localStorage.setItem('rsvp_pending', JSON.stringify(d)); } catch(e){} }
+  function clearPending(){ try { localStorage.removeItem('rsvp_pending'); } catch(e){} }
+  function setStatus(state){
+    const el = document.getElementById('sendStatus'); if (!el) return;
+    el.dataset.state = state;
+    el.innerHTML = state === 'ok' ? t('stOk') : state === 'fail'
+      ? `${t('stFail')} <button type="button" class="again" id="retrySend">${t('stRetry')}</button>` : t('stSending');
+    const r = document.getElementById('retrySend'); if (r) r.onclick = () => sendRSVP(thanksData);
+  }
+  async function sendRSVP(d, attempt = 1){
+    setStatus('sending');
+    if (!C.endpoint) { await new Promise(r => setTimeout(r, 400)); console.info('[RSVP preview]', d); clearPending(); setStatus('ok'); return; }
+    try {
+      const res = await fetch(C.endpoint, { method:'POST', body: JSON.stringify(d), keepalive:true });   // text/plain → không bị CORS preflight
+      const j = await res.json().catch(() => ({ok: res.ok}));
+      if (!j.ok) throw new Error(j.error || 'fail');
+      clearPending(); setStatus('ok');
+    } catch (e) {
+      if (attempt < 3) { setTimeout(() => sendRSVP(d, attempt + 1), 1500 * attempt); return; }
+      setStatus('fail');
+    }
+  }
+  // lần trước gửi chưa xong (mất mạng / đóng trang) → tự gửi lại khi mở trang
+  try { const pend = JSON.parse(localStorage.getItem('rsvp_pending') || 'null'); if (pend && pend.name) setTimeout(() => sendRSVP(pend), 1200); } catch(e){}
+  // "đánh thức" Apps Script khi khách bắt đầu điền, để lúc bấm gửi máy chủ đã sẵn sàng
+  let warmed = false;
+  const warm = () => { if (warmed || !C.endpoint) return; warmed = true; fetch(C.endpoint, {method:'GET'}).catch(() => {}); };
+  ['focusin','pointerdown'].forEach(ev => document.getElementById('rsvpForm')?.addEventListener(ev, warm, {once:true}));
+  document.querySelector('.cta')?.addEventListener('click', warm);
 
   function gcalLink(){
     const e = C.reception, d = e.date.replace(/-/g,'');
@@ -1083,7 +1110,8 @@ const CONFIG = {
       <div class="big">${t('thanks')(esc(d.name))}</div>
       <p>${yes ? t('thanksYes')(d.guests, dmy(C.reception.date)) : t('thanksNo')}</p>
       ${yes ? `<a class="map-btn" href="${gcalLink()}" target="_blank" rel="noopener">${t('gcal')}</a>` : ''}
-      <br><button class="again" onclick="location.reload()">${t('again')}</button>
+      <p class="send-status" id="sendStatus" data-state="sending" aria-live="polite"></p>
+      <button class="again" onclick="location.reload()">${t('again')}</button>
     </div>`;
     try { localStorage.setItem('rsvp_done', JSON.stringify({name:d.name, attending:d.attending, guests:d.guests})); } catch(e){}
   }
